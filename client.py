@@ -98,5 +98,5 @@ async def emoji(ctx: commands.Context, emoji: discord.PartialEmoji, *roles: disc
 bot.add('2', '4')
 
 
-bot.run('MTExNTE4NjIyMjA1OTQ5OTYxMA.GqvCrN.ebuYxwU9Q593yAV-KKt7rylzkngz0AU3bBYS0g')
+bot.run('')
 

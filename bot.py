@@ -89,7 +89,6 @@ if __name__ == "__main__":
 
     bot = commands.Bot(command_prefix='?', description=description, intents=intents)
 
-    REXTOPIA_TOKEN = "MTExNTkzNjgxOTYwODAzOTQ4Nw.GU0UIw.AUd_URbswmys8JZL-RBeJmE0ZM7xsCBxIRgeYc"
     bot.run(REXTOPIA_TOKEN)
 
 
