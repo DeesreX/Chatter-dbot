@@ -136,8 +136,8 @@ if __name__ == "__main__":
 
     bot = commands.Bot(command_prefix='?', description=description, intents=intents)
 
-    REXTOPIA_TOKEN = "MTExNTkzNjgxOTYwODAzOTQ4Nw.GU0UIw.AUd_URbswmys8JZL-RBeJmE0ZM7xsCBxIRgeYc"
-    bot.run(REXTOPIA_TOKEN)
+    vars = get_variables("./.env")
+    bot.run(vars["REXTOPIA_TOKEN"])
 
 
 # https://discord.com/api/oauth2/authorize?client_id=1115936819608039487&permissions=8&scope=applications.commands%20bot
