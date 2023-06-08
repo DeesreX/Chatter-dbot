@@ -7,8 +7,7 @@ import requests
 from requests.structures import CaseInsensitiveDict
 import json
 import os
-from dotenv import get_variables
-
+from dotenv import load_dotenv
 
 
 
@@ -37,7 +36,8 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='?', description=description, intents=intents)
 history = []
 # Set up your OpenAI API credentials
-openai.api_key = get_variables('./.env')['CHAT_TOKEN']
+print(os.getenv('CHAT_TOKEN'))
+openai.api_key = os.getenv('CHAT_TOKEN')
 tosend = {
   "model": "gpt-3.5-turbo",
   "messages": [{"role": "user", "content": "Hello!"}]
@@ -136,11 +136,9 @@ if __name__ == "__main__":
 
     bot = commands.Bot(command_prefix='?', description=description, intents=intents)
 
-    vars = get_variables("./.env")
-    bot.run(vars["REXTOPIA_TOKEN"])
+    bot.run(os.getenv("REXTOPIA_TOKEN"))
 
 
-# https://discord.com/api/oauth2/authorize?client_id=1115936819608039487&permissions=8&scope=applications.commands%20bot
 
 
 
