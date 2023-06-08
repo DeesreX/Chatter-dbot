@@ -1,18 +1,16 @@
-import typing
-
 import discord
+import os
+from dotenv import load_dotenv
 from discord.ext import commands
+from discord import client
 
-intents = discord.Intents.default()
+load_dotenv("./.env")
+intents = discord.Intents.all()
+client = discord.Client(intents=intents)
 
-bot = commands.Bot(command_prefix=commands.when_mentioned, description="Nothing to see here!", intents=intents)
+token = os.environ.get("REXTOPIA_TOKEN")
+print(token)
 
-# the `hidden` keyword argument hides it from the help command.
-@bot.group(hidden=True)
-async def secret(ctx: commands.Context):
-    """What is this "secret" you speak of?"""
-    if ctx.invoked_subcommand is None:
-        await ctx.send('Shh!', delete_after=5)
 
 
 def create_overwrites(ctx, *objects):
@@ -98,5 +96,5 @@ async def emoji(ctx: commands.Context, emoji: discord.PartialEmoji, *roles: disc
 bot.add('2', '4')
 
 
-bot.run('')
+bot.run('MTExNTE4NjIyMjA1OTQ5OTYxMA.GqvCrN.ebuYxwU9Q593yAV-KKt7rylzkngz0AU3bBYS0g')
 
