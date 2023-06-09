@@ -1,5 +1,3 @@
-# This example requires the 'members' and 'message_content' privileged intents to function.
-
 import discord
 from discord.ext import commands
 import openai
@@ -8,56 +6,65 @@ from requests.structures import CaseInsensitiveDict
 import json
 import os
 from dotenv import load_dotenv
+from bots import GPTBot
 
+SIZES = ['256x256', '512x512', '1024x1024']
 
-
-# import client
-
-# history = []
-
-# @client.command()
-# @commands.check(lambda ctx: ctx.channel.name == "code-questions")
-# async def get_history(ctx):
-#     response_with_mention = f"{ctx.author.mention}, here is your history list:\n"
-#     for response in history:
-#         response_with_mention += response + "\n"
-#     async with ctx.typing():
-#         await ctx.send(response_with_mention)
-
-description = '''An example bot to showcase the discord.ext.commands extension
-module.
-
-There are a number of utility commands being showcased here.'''
+load_dotenv('./.env')
+openai.api_key = os.getenv('CHAT_TOKEN')
 
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+bot = commands.Bot(command_prefix='/', description="A BOT", intents=intents)
 
-bot = commands.Bot(command_prefix='?', description=description, intents=intents)
-history = []
-# Set up your OpenAI API credentials
-print(os.getenv('CHAT_TOKEN'))
-openai.api_key = os.getenv('CHAT_TOKEN')
-tosend = {
-  "model": "gpt-3.5-turbo",
-  "messages": [{"role": "user", "content": "Hello!"}]
-}
+# Example usage
+gentle_bot = GPTBot(
+    id=1,
+    name="GentleBot",
+    nickname="GentleOne",
+    personality="Gentle",
+    preferences={"language": "English", "timezone": "UTC"}
+)
 
-def getResponse(text):
+# Add some gentle memories
+gentle_bot.add_memory("You are kind and compassionate.")
+gentle_bot.add_memory("Spread love and positivity.")
+gentle_bot.add_memory("Be gentle in your words and actions.")
+
+# Save the bot's memory to Redis
+gentle_bot.save_memory()
+
+# Load the bot's memory from Redis
+gentle_bot.load_memory()
+
+# Print the loaded memory
+print(gentle_bot.memory)
+
+
+def getResponse(text, system = ""):
+    memories = gentle_bot.get_memory()
+
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": text},
+    ]
+
     response = openai.ChatCompletion.create(
     model= "gpt-3.5-turbo",
-    messages= [{"role": "user", "content": text}]
+    messages = messages
     )
-    # Get the generated text from the API response
+
     completion = response.choices[0]["message"]["content"]
     return completion
 
 
 def getImageResponse(prompt):
+    generation_size = SIZES[0]
     response = openai.Image.create(
     prompt=prompt,
     n=1,
-    size="256x256"
+    size=generation_size
     )
     image_url = response['data'][0]['url']
     return image_url
@@ -71,37 +78,34 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    allowed = ["DeesreX", "NO.", "Mage", "HighVoltage", "Demikas"]
+    allowed = ["DeesreX", "NO.", "Mage", "HighVoltage", "Demikas", "Codename", "LF", "CaFe MogadoR -Upland Daily News"]
     # Check if the message is sent by a user and not a bot
-    async with message.channel.typing():
-        if message.author.name in allowed:
-            # check what channel
-            if message.channel.name == "chat":
-                await chat(message)
-            elif message.channel.name == "image-generation":
-                await image_generation(message)
+    if message.author.name in allowed:
+        gentle_bot.add_memory(message.content)
+        # check what channel
+        if message.channel.name == "chat":
+            await chat(message)
+        elif message.channel.name == "image-generation":
+            await image_generation(message)
+        elif message.channel.name == "code-explained":
+            task = "Explain the code"
+            response = getResponse(f"{task} \n {message.content}")
+            response_with_mention = f"{message.author.mention} {response}"
+            async with message.channel.typing():
+                await message.channel.send(response_with_mention)
+        elif message.channel.name == "code-questions":
+            task = "You are a assistant coder. Please respond to the following: "
+            response = getResponse(f"{task} \n {message.content}")
+            response_with_mention = f"{message.author.mention} {response}"
+            async with message.channel.typing():
+                await message.channel.send(response_with_mention)
+        elif message.channel.name == "pre-alpha":
+            system = "You are my personal AI and I will be asking you questions through Discord bot and openai api. Please respond to the following: "
+            response = getResponse(f"message.content", system)
+            response_with_mention = f"{message.author.mention} {response}"
+            async with message.channel.typing():
+                await message.channel.send(response_with_mention)
 
-
-            elif message.channel.name == "code-explained":
-                task = "Explain the code"
-                response = getResponse(f"{task} \n {message.content}")
-                response_with_mention = f"{message.author.mention} {response}"
-                async with message.channel.typing():
-                    await message.channel.send(response_with_mention)
-            elif message.channel.name == "code-questions":
-                task = "You are a assistant coder. Please respond to the following: "
-                response = getResponse(f"{task} \n {message.content}")
-                response_with_mention = f"{message.author.mention} {response}"
-                async with message.channel.typing():
-                    await message.channel.send(response_with_mention)
-            elif message.channel.name == "pre-alpha":
-                task = "You are my personal AI and I will be asking you questions through Discord bot and openai api. Please respond to the following: "
-                response = getResponse(f"{task} \n {message.content}")
-                response = getResponse(f"{task} \n {message.content}")
-                history.append(response)
-                response_with_mention = f"{message.author.mention} {response}"
-                async with message.channel.typing():
-                    await message.channel.send(response_with_mention)
 
 async def image_generation(message):
     image_url = getImageResponse(message.content)
@@ -113,7 +117,9 @@ async def image_generation(message):
 
 async def chat(message):
     async with message.channel.typing():
-        response = getResponse(message.content)
+        user_content = "USER_MESSAGE[" + message.content + "] from (" + str(message.author) + ")"
+        system_content = "YOUR MEMORIES [\n".join(gentle_bot.get_memory()) + "\n]"
+        response = getResponse(user_content, system_content)
         response_with_mention = f"{message.author.mention}, {response}"
         await message.channel.send(response_with_mention)
 
@@ -123,22 +129,9 @@ async def joined(ctx, member: discord.Member):
     """Says when a member joined."""
     await ctx.send(f'{member.name} joined {discord.utils.format_dt(member.joined_at)}')
 
-
 if __name__ == "__main__":
     description = '''An example bot to showcase the discord.ext.commands extension
     module.
-
     There are a number of utility commands being showcased here.'''
-
-    intents = discord.Intents.default()
-    intents.members = True
-    intents.message_content = True
-
-    bot = commands.Bot(command_prefix='?', description=description, intents=intents)
-
     bot.run(os.getenv("REXTOPIA_TOKEN"))
-
-
-
-
 
