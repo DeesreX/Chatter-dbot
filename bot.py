@@ -27,6 +27,14 @@ gentle_bot = GPTBot(
     preferences={"language": "English", "timezone": "UTC"}
 )
 
+sensei_bot = GPTBot(
+    id=0,
+    name="Coding Sensei",
+    nickname="Sensei",
+    personality="Strict, Sensei",
+    preferences={"language": "English", "timezone": "UTC"}
+)
+
 # Add some gentle memories
 gentle_bot.add_memory("You are kind and compassionate.")
 gentle_bot.add_memory("Spread love and positivity.")
@@ -42,11 +50,11 @@ gentle_bot.load_memory()
 print(gentle_bot.memory)
 
 
-def getResponse(text, system = ""):
-    memories = gentle_bot.get_memory()
+def getResponse(text, system = "", bot = GPTBot(None,None,None,None,None)):
+    memories = bot.get_memory()
 
     messages = [
-        {"role": "system", "content": system},
+        {"role": "system", "content": system + " ".join(memories)},
         {"role": "user", "content": text},
     ]
 
@@ -89,19 +97,19 @@ async def on_message(message):
             await image_generation(message)
         elif message.channel.name == "code-explained":
             task = "Explain the code"
-            response = getResponse(f"{task} \n {message.content}")
+            response = getResponse(f"{task} \n {message.content}", gentle_bot)
             response_with_mention = f"{message.author.mention} {response}"
             async with message.channel.typing():
                 await message.channel.send(response_with_mention)
         elif message.channel.name == "code-questions":
             task = "You are a assistant coder. Please respond to the following: "
-            response = getResponse(f"{task} \n {message.content}")
+            response = getResponse(f"{task} \n {message.content, gentle_bot}")
             response_with_mention = f"{message.author.mention} {response}"
             async with message.channel.typing():
                 await message.channel.send(response_with_mention)
         elif message.channel.name == "pre-alpha":
-            system = "You are my personal AI and I will be asking you questions through Discord bot and openai api. Please respond to the following: "
-            response = getResponse(f"message.content", system)
+            task = "Coding Teacher"
+            response = getResponse(message.content, task, sensei_bot)
             response_with_mention = f"{message.author.mention} {response}"
             async with message.channel.typing():
                 await message.channel.send(response_with_mention)
